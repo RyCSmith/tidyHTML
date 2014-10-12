@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+  <head>
+    <meta http-equiv="Content-Type"
+    content="text/html; charset=utf-8" />
+    <title>CIT591 HTML Tidy</title>
+    <link rel="stylesheet" type="text/css"
+    href="http://fonts.googleapis.com/css?family=Inconsolata" />
+    <link href="../style.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="../css/style.css" type="text/css" />
+    <!-- Google code prettifier -->
+    <link rel="stylesheet" type="../text/css" href="google-code-
+    prettify/prettify.css" />
+    <script src='google-code-prettify/prettify.js'
+    type='text/javascript'></script>
+    
+  </head>
+  
+  <body onLoad="prettyPrint()">
+  
+    <header>
+      <span class="head">CIT 591 Assignment 4: HTML Tidy</span><br />
+      <span class="subhead">Fall 2014, David Matuszek</span>
+      
+    </header>
+    
+    <h1>Purposes of this assignment</h1>
+    
+    <ul>
+      <li>Give you some experience with file input and output.</li>
+      <li>Give you experience with string processing.</li>
+      
+    </ul>
+    
+    <h1>General idea of the assignment</h1>
+    <p>HTML is the language of the web. When you open a page in your browser,
+    your browser gets a plain (unformatted) text file, with an <code>.html</code>
+    (or sometimes <code>.htm</code>) extension. This file contains both text and
+    commands to format that text. Sometimes it isn't very neat. Your job is to
+    &quot;tidy&quot; it up and produce the equivalent<code> .html</code> file, but
+    which is properly indented and does not contain excessively long lines.</p>
+    <p>Put your program on a file named <code>tidyHTML.py</code>. Your program
+    should have a method named <code>main</code>. When executed, <code>main</code>
+    should ask for the name of an HTML file, tidy it up, and (after some other file
+    manipulations) put the result back on the same file. The extra file
+    manipulations, described below, should prevent a bad program from accidentally
+    destroying its input file. </p>
+    
+    <h1>What you need to know about HTML</h1>
+    <p>HTML consists of text, most of which you will see on the screen, and
+    tags, which you won't see, but which affect how things are formatted. There are
+    two kinds of tags: Grouping tags, which have both a <span
+    class="definiendum">start tag</span> and an <span class="definiendum">end
+    tag</span> with enclosed text, and <span class="definiendum"><em>empty content
+    tags</em></span>.</p>
+    <p>Grouping tags have the syntax <code>&lt;<em>tagname</em>&gt;<em>enclosed
+    text</em>&lt;/<em>tagname</em>&gt;</code>, for example,
+    <code>&lt;strong&gt;word&lt;/strong&gt;</code> will make the
+    <strong>word</strong> bold. After the tagname there may be whitespace followed
+    by other information, for example, <code>&lt;span
+    class=&quot;head&quot;&gt;<em>enclosed text</em>&lt;/span&gt;</code>. Tags are
+    case-insensitive, so for example, <code>&lt;Strong&gt;<em>enclosed
+    text</em>&lt;/sTrOnG&gt;</code> is legal. Tagnames consist <em>only</em> of
+    letters--no digits or other characters.</p>
+    <p>If a <code>&lt;</code> occurs in an HTML document, and the next character
+    is a letter, it's a tag. But if the next character is not a letter, the
+    <code>&lt;</code> is just another text character, not part of a tag.</p>
+    <p>An example of an empty content tag is <code>&lt;hr&gt;</code>, which just
+    draws a horizontal line. Standalone tags are sometimes written with a following
+    slash, as <code>&lt;hr/&gt;</code> or <code><nobr>&lt;hr /&gt;</nobr></code>.
+    </p>
+    <p>Grouping tags may be nested. For example, to make
+    <strong><em>word</em></strong> both bold and italic, the HTML might be
+    <code>&lt;strong&gt;&lt;em&gt;word&lt;/em&gt;&lt;/strong&gt;</code>. Grouping
+    tags may also be <em>incorrectly</em> nested, as in <code>&lt;strong&gt;&lt;em&g
+    t;word&lt;/strong&gt;</code><code>&lt;/em&gt;</code>. I will give you some rules
+    about what to do in the simplest cases of bad nesting, but most of the time
+    there isn't much you can reasonably do.</p>
+    <p>The  empty content tags are: <code>area</code>, <code>base</code>,
+    <code>basefont</code>, <code>br</code>, <code>col</code>, <code>frame</code>,
+    <code>hr</code>, <code>img</code>, <code>input</code>, <code>isindex</code>,
+    <code>link</code>, <code>meta</code>, and <code>param</code>; any other tag is a
+    grouping tag. In general, you don't need to know what any of these tags do. One
+    exception is <code>&lt;pre&gt;<em>enclosed text</em>&lt;/pre&gt;</code>, which
+    says: Don't change the enclosed text in any way whatsoever; leave it exactly as
+    is.</p>
+    
+    <h1>Details</h1>
+    
+    <h2>Overall process</h2>
+    
+    <ol>
+    
+      <li>Ask the user what <code>.html</code> (or <code>.htm</code>) file to
+      read in.
+      
+        <ul>
+          <li>See <a href="http://choorucode.com/2014/02/25/how-to-use-file-
+          open-dialog-to-get-file-path-in-python/">How To Use Open File Dialog...</a> for
+          how to do this nicely. </li>
+          
+        </ul>
+        
+      </li>
+      <li>Copy the input file to a file of the same name, but with the
+      <em>additional</em> extension <code>.bak</code>.</li>
+      <li>Generate a name for the output file. The name should consist of a
+      large random integer (use <code>random.randint(1, sys.maxint)</code>), with the
+      <code>.html</code> extension.</li>
+      <li>Read and process the input file, writing to the output file. You will
+      probably find it simplest to read and process one line at a time, but it's also
+      okay to read in the entire file.</li>
+      <li>If the output file appears to have been written successfully, delete
+      the original input file, and rename your output file to have the same name.
+      Leave the <code>.bak</code> file in place (just in case). </li>
+      
+    </ol>
+    
+    <h2>Indentation</h2>
+    <p>For each line:</p>
+    
+    <ul>
+    
+      <li>If the line contains <em>both</em> a start tag and  matching end tag,
+      with any intervening tags properly nested, that part of the line is treated as
+      just ordinary text; nothing special is done to it.
+        <ul>
+          <li>
+          
+            <table border="1" cellspacing="0" cellpadding="4">
+            
+              <tr>
+              
+                <td>
+                  <table border="0" cellspacing="0" cellpadding="4">
+                  
+                    <tr>
+                      <td><code>This is the &lt;i&gt;way&lt;/i&gt; the world
+                      ends</code></td>
+                      
+                    </tr>
+                    
+                    <tr>
+                      <td>is not changed: </td>
+                      
+                    </tr>
+                    
+                    <tr>
+                      <td><code>This is the &lt;i&gt;way&lt;/i&gt; the world
+                      ends</code></td>
+                      
+                    </tr>
+                    
+                  </table>
+                  
+                </td>
+                
+                <td>
+                  <table border="0" cellspacing="0" cellpadding="4">
+                  
+                    <tr>
+                      <td><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Not with a
+                      &lt;b&gt;bang&lt;/b&gt; </code></td>
+                      
+                    </tr>
+                    
+                    <tr>
+                      <td>the indentation doesn't change, either: </td>
+                      
+                    </tr>
+                    
+                    <tr>
+                      <td><code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Not with a
+                      &lt;b&gt;bang&lt;/b&gt; </code></td>
+                      
+                    </tr>
+                    
+                  </table>
+                  
+                </td>
+                
+              </tr>
+              
+            </table>
+            
+          </li>
+          
+        </ul>
+        
+      </li>
+      
+      <li>If the line contains a start tag but does <em>not</em> contain the
+      matching end tag, then all lines between the start tag and the matching end tag
+      should be indented two additional spaces.
+        <ul>
+          <li>
+          
+            <table border="1" cellspacing="0" cellpadding="4">
+            
+              <tr>
+              
+                <td valign="top">
+                  <table border="0" cellspacing="0" cellpadding="4">
+                  
+                    <tr>
+                    
+                      <td>
+                        <p>
+                          <code>This is the &lt;i&gt;way the world ends<br>
+                            Not with a bang&lt;/i&gt;<br>
+                            
+                          </code>
+                          
+                        </p>
+                        
+                      </td>
+                      
+                    </tr>
+                    
+                    <tr>
+                      <td>becomes</td>
+                      
+                    </tr>
+                    
+                    <tr>
+                    
+                      <td>
+                        <p>
+                          <code>This is the<br>
+                          
+                          </code>
+                          
+                          <code> &lt;i&gt;way the world ends<br>
+                            &nbsp;              Not with a bang<br>
+                            &lt;/i&gt;
+                          </code>
+                          
+                        </p>
+                        
+                      </td>
+                      
+                    </tr>
+                    
+                  </table>
+                  
+                </td>
+                
+                <td>
+                  <table border="0" cellspacing="0" cellpadding="4">
+                  
+                    <tr>
+                    
+                      <td>
+                        <p><code>This is the</code>
+                          <code>&lt;i&gt;way the world ends<br>
+                            Not &lt;b&gt;with a bang<br>
+                            but&lt;/b&gt; a whimper&lt;/i&gt;.
+                          </code>
+                          
+                        </p>
+                        
+                      </td>
+                      
+                    </tr>
+                    
+                    <tr>
+                      <td>becomes<strong> (note correction) </strong></td>
+                      
+                    </tr>
+                    
+                    <tr>
+                    
+                      <td>
+                        <code>This is the<br>
+                        
+                        </code>
+                        
+                        <code>&lt;i&gt;way the world ends<br>
+                          &nbsp;&nbsp;Not<br>
+                          &nbsp;&nbsp;&lt;b&gt;with a bang<br>
+                          &nbsp;&nbsp;&nbsp;&nbsp;but<br>
+                          &nbsp;&nbsp;&lt;/b&gt;<s> a whimper</s><br>
+                          &nbsp;&nbsp;<span class="correction">a whimper</span>
+                          <br>
+                                                  &lt;/i&gt;.
+                        </code>
+                        
+                      </td>
+                      
+                    </tr>
+                    
+                  </table>
+                  
+                </td>
+                
+              </tr>
+              
+            </table>
+            
+          </li>
+          
+          <li>If the start tag is at the beginning of a line (ignoring spaces),
+          it should be indented the same amount as the preceding line.
+          
+            <ul>
+            
+              <li>
+              
+                <table border="1" cellspacing="0" cellpadding="4">
+                
+                  <tr>
+                  
+                    <td>
+                      <table border="0" cellspacing="0" cellpadding="4">
+                      
+                        <tr>
+                        
+                          <td>
+                            <p>
+                              <code>This is the preceding line.<br>
+          &lt;p&gt;And this line lacks an end tag
+                              </code>
+                              
+                            </p>
+                            
+                          </td>
+                          
+                        </tr>
+                        
+                        <tr>
+                          <td>is not changed: </td>
+                          
+                        </tr>
+                        
+                        <tr>
+                        
+                          <td>
+                            <code>This is the preceding line.<br>
+                                                          &lt;p&gt;And this line
+                                                          lacks an end tag
+                            </code>
+                            
+                          </td>
+                          
+                        </tr>
+                        
+                      </table>
+                      
+                    </td>
+                    
+                  </tr>
+                  
+                </table>
+                
+              </li>
+              
+            </ul>
+            
+          </li>
+          
+          <li>If the start tag is not at the beginning of a line, move it (and
+          all the rest of the line) to a new line, along with the remainder of the text on
+          that line.
+          
+            <ul>
+            
+              <li>
+              
+                <table border="1" cellspacing="0" cellpadding="4">
+                
+                  <tr>
+                  
+                    <td>
+                      <table border="0" cellspacing="0" cellpadding="4">
+                      
+                        <tr>
+                          <td><code>the world ends&lt;p&gt;not with a
+                          bang</code> </td>
+                          
+                        </tr>
+                        
+                        <tr>
+                          <td>becomes</td>
+                          
+                        </tr>
+                        
+                        <tr>
+                        
+                          <td>
+                            <code>the world ends<br>
+                                                          &lt;p&gt;not with a
+                                                          bang
+                            </code>
+                            
+                          </td>
+                          
+                        </tr>
+                        
+                      </table>
+                      
+                    </td>
+                    
+                  </tr>
+                  
+                </table>
+                
+              </li>
+              
+            </ul>
+            
+          </li>
+          
+          <li>Process the remainder of the line in the same way (it may contain
+          additional start tags).
+          
+            <ul>
+            
+              <li>
+              
+                <table border="1" cellspacing="0" cellpadding="4">
+                
+                  <tr>
+                  
+                    <td>
+                      <table border="0" cellspacing="0" cellpadding="4">
+                      
+                        <tr>
+                        
+                          <td>
+                            <code>&lt;table&gt;&lt;tr&gt;&lt;td&gt;This is table
+                            data&lt;/td&gt;<br>
+                              &lt;td&gt;and more table
+                              data&lt;/td&gt;&lt;/tr&gt;
+                              
+                            </code>
+                            
+                          </td>
+                          
+                        </tr>
+                        
+                        <tr>
+                          <td>becomes</td>
+                          
+                        </tr>
+                        
+                        <tr>
+                        
+                          <td>
+                            <code>&lt;table&gt;<br>
+                              &nbsp;&nbsp;&lt;tr&gt;&lt;td&gt;This is table
+                              data&lt;/td&gt;<br>
+                              &nbsp;&nbsp;&nbsp;&nbsp;&lt;td&gt;and more table
+                              data&lt;/td&gt;<br>
+                              &nbsp;&nbsp;&lt;/tr&gt;
+                            </code>
+                            
+                          </td>
+                          
+                        </tr>
+                        
+                      </table>
+                      
+                    </td>
+                    
+                  </tr>
+                  
+                </table>
+                
+              </li>
+              
+            </ul>
+            
+          </li>
+          <li>When the matching end tag is encountered, it should be put on a
+          line by itself, with the same indentation as the start tag.</li>
+          
+        </ul>
+        
+      </li>
+      
+      <li>Special case: Any <code>pre</code> tag should be at the beginning of a
+      line (properly indented). Everything up to and including the matching end tag
+      should be left <em>exactly</em> as it is, regardless of how it is indented or
+      how long the line may be.
+      
+        <ul>
+        
+          <li>
+          
+            <table border="1" cellspacing="0" cellpadding="4">
+            
+              <tr>
+              
+                <td>
+                  <table border="0" cellspacing="0" cellpadding="4">
+                  
+                    <tr>
+                    
+                      <td>
+                        <code>In Python, &lt;pre&gt;while x &lt; 1:<br>
+                                                  &nbsp;&nbsp;&nbsp;&nbsp;
+                                                  print i&lt;/pre&gt; could be an infinite loop
+                        </code>
+                        
+                      </td>
+                      
+                    </tr>
+                    
+                    <tr>
+                      <td>becomes</td>
+                      
+                    </tr>
+                    
+                    <tr>
+                    
+                      <td>
+                        <code>In Python,<br>
+                          &lt;pre&gt;while x &lt; 1:<br>
+                                                  &nbsp;&nbsp;&nbsp;&nbsp;
+                                                  print i&lt;/pre&gt; could be an infinite loop
+                        </code>
+                        
+                      </td>
+                      
+                    </tr>
+                    
+                  </table>
+                  
+                </td>
+                
+              </tr>
+              
+            </table>
+            
+          </li>
+          
+        </ul>
+        
+      </li>
+      
+    </ul>
+    
+    <h2>Case</h2>
+    <p>All tag names should be lowercase. If they aren't, lowercase them. If
+    there is any information in the tag after the tag name, leave it as is. </p>
+    
+    <h2>Lines and line length</h2>
+    <p>There should be exactly one blank line before each of the following start
+    tags: <code>head</code>, <code>body</code>, <code>h1</code>, <code>h2</code>,
+    <code>h3</code>, <code>h4</code>, <code>h5</code>, <code>h6</code>. Other blank
+    lines (unless they are inside a <code>pre</code> tag) should be deleted.</p>
+    <p>There should be no whitespace (space or tab) at the end of any line,
+    unless the whitespace is within a <code>pre</code> tag.</p>
+    <p>Lines should be no longer than 80 characters (counting indentation). If a
+    line is longer than 80 characters, find the last blank before the 80th character
+    position, insert a newline character, and indent the new line the same amount as
+    the original line. Since lines might be 200 or more characters in length, repeat
+    this procedure as necessary until no line is longer than 80 characters (unless
+    it is within a <code>pre</code> tag!).</p>
+    
+    <h2>Keeping track of nesting</h2>
+    <p>If <code>tags</code> is a list,</p>
+    
+    <ul>
+      <li><code>tags.append(<em>string</em>)</code> will add
+      <code><em>string</em></code> to the end of the list.</li>
+      <li><code><em>string</em> = tags.pop()</code> will remove the last element
+      from the list and assign it to <em><code>string</code></em>. It's an error if
+      <code>tags</code> is the empty list.</li>
+      <li><code>tags == []</code> will be True if the list is empty.</li>
+      <li><code>tags[-1]</code> refers to the last element of the list.</li>
+      
+    </ul>
+    <p>Lists provide an excellent way of keeping track of nesting. Start with an
+    empty list; whenever you encounter a start tag, append it to the list. Whenever
+    you encounter an end tag, compare it to the last thing in the list, and if it
+    matches, pop it from the list. (If it doesn't match, the nesting is incorrect.)
+    Empty content tags should not be put on the list.</p>
+    
+    <h2>Dealing with incorrect nesting</h2>
+    <p>There's no good way. Seriously. Every browser does something
+    different.</p>
+    <p>The following approach should work well enough for our purposes. It is
+    based on the assumption that the most common type of error is a missing end
+    tag.</p>
+    <p>If an end tag (call it &quot;E&quot;) doesn't match the last thing on the
+    list of start tags, then insert an end tag for that start tag, and pop the start
+    tag   from the list. If E still doesn't match, do it again. If, after inserting
+    two end tags, E still doesn't match the last thing in the list, discard E. </p>
+    
+    <h1>Style</h1>
+    <p>All the usual--meaningful variable names, spaces around binary operators
+    (including <code>**</code>, which some of you haven't been putting spaces
+    around), etc. Write a doc string for each function, and be sure to put your
+    name, and your partner's name, in comments at the very top of the program. </p>
+    <p>Your program should consist of a lot of little functions, not a few big
+    functions. Functions should be of two types: Those that do input or output, and
+    those that do computation. You should have good unit tests for every function
+    that does computation.  (If you have just a few big functions, you will find
+    unit testing very, very difficult!) </p>
+    
+    <h1>Grading</h1>
+    <p>We won't have unit tests for your assignment, for the simple reason that
+    I haven't told you exactly what your functions should be. Instead, I will try to
+    write the program myself, and compare my output against yours. Hopefully, the
+    results will be character-by-character identical!</p>
+    <p>We will also be looking at your unit tests, to see whether they seem
+    adequate. </p>
+    
+    <h1>Due date</h1>
+    Turn your assignment in to <a
+    href="https://canvas.upenn.edu/courses/1256416">Canvas</a> before <strong>6am
+    Friday, September 26</strong>. Zip your program file and your test file
+    together. This is a pair programming assignment, so you should decide which of
+    you will turn it in (we don't want to grade two copies of the same program). Be
+    sure to put <strong>both of your names</strong> in a comment right at the top of
+    the program.
+    
+  </body>
+  
+  </html>
